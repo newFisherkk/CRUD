@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+  
+<!-- 在mybatis generator官网拿的 -->
+<generatorConfiguration>
+  
+  <context id="DB2Tables" targetRuntime="MyBatis3">
+  	<!-- 不要注释 （这个配置还必须放最前面）-->
+	<commentGenerator>
+  		<property name="suppressAllComments" value="true" />
+	</commentGenerator>
+  <!-- 配置数据库连接 去数据库修改时区再添加一个条件即可-->
+    <jdbcConnection 
+    	driverClass="com.mysql.cj.jdbc.Driver"
+        connectionURL="jdbc:mysql://localhost:3306/ssm-crud?useSSL=false"
+        userId="root"
+        password="123456">
+    </jdbcConnection>
+
+    <javaTypeResolver >
+      <property name="forceBigDecimals" value="false" />
+    </javaTypeResolver>
+	
+	<!-- 指定javabean生成的位置 -->
+	<!-- ==================为什么用这个斜杠啊 \ -->
+    <javaModelGenerator 
+    	targetPackage="com.pojo" 
+    	targetProject=".\src\main\java" >
+      <property name="enableSubPackages" value="true" />
+      <property name="trimStrings" value="true" />
+    </javaModelGenerator>
+	
+	<!-- 指定sql映射文件生成的位置 -->
+    <sqlMapGenerator 
+    	targetPackage="mapper"  
+    	targetProject=".\src\main\resources">
+      <property name="enableSubPackages" value="true" />
+    </sqlMapGenerator>
+	
+	<!-- 指定dao接口生成的位置 -->
+    <javaClientGenerator type="XMLMAPPER" 
+	    targetPackage="com.mapper"  
+	    targetProject=".\src\main\java">
+      <property name="enableSubPackages" value="true" />
+    </javaClientGenerator>
+
+
+	<!-- 指定每个表生成策略 -->
+    <table tableName="tbl_emp" domainObjectName="Employee"/>
+	<table tableName="tbl_dept" domainObjectName="Department"/>
+
+  </context>
+</generatorConfiguration>

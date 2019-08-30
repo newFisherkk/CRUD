@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context ="http://www.springframework.org/schema/context" 
+    xmlns:aop="http://www.springframework.org/schema/aop" 
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx.xsd" >
+        
+        
+                
+        <!-- 开启spring的IOC注解扫描 ，扫描com包下的所有注解注入spring容器，不扫controller：与事物相关-->
+        <context:component-scan base-package="com">
+        	<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        </context:component-scan>
+        
+        <!-- 读取jdbc.properties配置 -->
+        <context:property-placeholder location="classpath:jdbc.properties"/>
+        
+        <!-- 数据源-->
+        <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        	<property name="url" value="${jdbc.url}"/>
+        	<property name="driverClassName" value="${jdbc.driverClass}"/>
+        	<property name="username" value="${jdbc.user}"/>
+        	<property name="password" value="${jdbc.password}"/>
+        	<property name="maxActive" value="10"/>
+        	<property name="maxIdle" value="5"/>
+        </bean>
+        
+        <!-- 与Mybaits整合 -->
+        <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+        	<!-- 指定全部配置文件的位置！！！！！很关键，没有这个pagehelper页数，总页数，导航页都是1 -->
+        	<property name="configLocation" value="classpath:mybatis-config.xml"/>
+        	
+        	<property name="dataSource" ref="dataSource" />
+        	<!-- 加载sql映射文件，加载多个sql映射配置则用 *.xml-->
+        	<property name="mapperLocations" value="classpath:mapper/*.xml"/>
+        </bean>
+        
+        
+        <!-- mapper接口扫描 ：jdk动态代理,将mybaits接口的实现加入到ioc容器中  -->
+        <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        	<!-- 配置Mapper接口所在包路径，会扫描包下所有接口 -->
+        	<property name="basePackage" value="com.mapper" />
+        </bean>
+
+        <!-- 配置一个可以批量处理sqlSession的实现类-sqlSessionTemplate -->
+        <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        	<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"></constructor-arg>
+        	<constructor-arg name="executorType" value="BATCH"></constructor-arg>
+        </bean>
+        
+        <!-- 开启spring的事务管理器,关联连接池 -->
+        <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        	<property name="dataSource" ref="dataSource" />
+        </bean> 
+  		
+  		<!-- xml配置事物 -->
+  		<aop:config>
+  			<!-- 切入点表达式 第一个.表示 public private等，第一个双点..*表示service下的包以及子包，第二个双点表任意多参数-->
+  			<aop:pointcut expression="execution(* com.service..* (..))" id="txPoint"/>
+  			<!-- 配置事物增强 -->
+  			<aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"/>
+  		</aop:config>
+  		<!-- 事物如何切入 -->
+ 		<tx:advice id="txAdvice" transaction-manager="transactionManager">
+ 			<tx:attributes>
+ 				<!-- 切入点切入的所有方法都是事物方法  -->
+ 				<tx:method name="*"/>
+ 				<!-- get开头的方法都是事物方法 -->
+ 				<tx:method name="get*"/>
+ 			</tx:attributes>
+ 		</tx:advice>
+</beans>
